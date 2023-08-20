@@ -32,6 +32,10 @@ if [ ! -d ./data ]; then
     mkdir ./data
 fi
 
+# Ensure acme has the right permissions
+sudo touch /docker/traefik/acme.json
+sudo chmod 600 /docker/traefik/acme.json
+
 # Check if port 53 is claimed by another process
 if sudo ss -tuln | grep -q ':53'; then
     # Check if piholedoh service is up using docker-compose
