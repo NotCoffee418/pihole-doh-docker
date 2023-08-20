@@ -1,0 +1,58 @@
+version: "3"
+
+services:
+  pihole:
+    image: pihole/pihole:latest
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      # Router for Pi-hole Web UI
+      - "traefik.http.routers.pihole.rule=Host(`${PIHOLE_DOMAIN}`)"
+      - "traefik.http.services.pihole.loadbalancer.server.port=80"
+      - "traefik.http.routers.pihole.tls=true"
+      - "traefik.http.routers.pihole.entrypoints=websecure"
+      - "traefik.http.routers.pihole.tls.certresolver=myresolver"
+      - "traefik.http.routers.pihole.service=pihole"
+    environment:
+      ServerIP: ${SERVER_IP}
+      TZ: Europe/Brussels
+      DNS1: 172.25.0.2#53
+      DNS2: no
+    volumes:
+      - ./data/pihole:/etc/pihole/
+      - ./data/dnsmasq.d/:/etc/dnsmasq.d/
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    networks:
+      traefik_proxy:
+      pihole_net:
+        ipv4_address: 172.25.0.3
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command:
+      - "proxy-dns"
+      - "--address"
+      - "0.0.0.0"
+      - "--port"
+      - "53"
+      - "--upstream"
+      - "https://1.1.1.1/dns-query"
+      - "--upstream"
+      - "https://1.0.0.1/dns-query"
+    networks:
+      pihole_net:
+        ipv4_address: 172.25.0.2
+
+networks:
+  traefik_proxy:
+    external: true
+  pihole_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/16
