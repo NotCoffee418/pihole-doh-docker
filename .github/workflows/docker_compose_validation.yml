@@ -1,0 +1,23 @@
+name: Docker Compose Validation
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose-plugin
+
+      - name: Validate docker-compose.piholedoh.yml
+        run: docker-compose -f docker-compose.piholedoh.yml config
+
+      - name: Validate docker-compose.traefik.yml
+        run: docker-compose -f docker-compose.traefik.yml config
