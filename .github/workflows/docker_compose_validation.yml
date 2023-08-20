@@ -2,7 +2,9 @@ name: Docker Compose Validation
 
 on:
   push:
-    branches: [dev]
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
 
 jobs:
   validate:
@@ -16,3 +18,12 @@ jobs:
 
       - name: Validate docker-compose.traefik.yml
         run: docker compose -f docker-compose.traefik.yml config
+
+      - name: Validate start.sh
+        run: bash -n start.sh
+
+      - name: Validate stop.sh
+        run: bash -n stop.sh
+
+      - name: Validate set-password.sh
+        run: bash -n set-password.sh
